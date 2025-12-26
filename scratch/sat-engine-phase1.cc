@@ -14,6 +14,8 @@ using namespace ns3;
 /* =======================
    GS–SAT LINK STRUCT
    ======================= */
+
+
 struct GsLink
 {
     Ptr<Node> gs;
@@ -50,6 +52,7 @@ void UpdateOrbit(Ptr<Node> node, double radius, double omega, double phase)
    ======================= */
 void UpdateGsVisibility(double maxGsDistance)
 {
+   
     Ptr<Node> gs = gsLinks[0].gs;
     Ptr<MobilityModel> gsMob = gs->GetObject<MobilityModel>();
 
@@ -90,6 +93,18 @@ void UpdateGsVisibility(double maxGsDistance)
                 ipv4->SetDown(iface);
         }
     }
+    if (bestLink)
+{
+    NS_LOG_UNCOND("t=" << Simulator::Now().GetSeconds()
+        << " GS connected to SAT "
+        << bestLink->sat->GetId()
+        << " dist=" << bestDist/1000 << " km");
+}
+else
+{
+    NS_LOG_UNCOND("t=" << Simulator::Now().GetSeconds()
+        << " GS has NO visible satellite");
+}
 
     Simulator::Schedule(
         Seconds(1.0),
@@ -102,7 +117,7 @@ void UpdateGsVisibility(double maxGsDistance)
    ======================= */
 int main(int argc, char *argv[])
 {
-    uint32_t numSatellites = 20;
+    uint32_t numSatellites = 100;
     double orbitRadiusKm = 6371 + 550;     // Earth + LEO altitude
     double satelliteSpeed = 7500;          // m/s
     double baseOmega = satelliteSpeed / (orbitRadiusKm * 1000);
@@ -133,7 +148,7 @@ int main(int argc, char *argv[])
     gsMob.Install(groundStations);
 
     groundStations.Get(0)->GetObject<MobilityModel>()->SetPosition(
-        Vector(0, 0, 0));
+        Vector(6371e3, 0, 0));
 
     /* ---------- Orbit Scheduling ---------- */
     for (uint32_t i = 0; i < numSatellites; ++i)
@@ -196,7 +211,7 @@ int main(int argc, char *argv[])
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
     /* ---------- GS Visibility Controller ---------- */
-    double maxGsDistance = 3000e3; // 3000 km
+    double maxGsDistance = 7500e3; // 7500 km
     Simulator::Schedule(
         Seconds(0.0),
         &UpdateGsVisibility,
